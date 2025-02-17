@@ -17,16 +17,36 @@ TODO: Add description here
 ---
 
 ## **Introduction**
-TOTO: Provide a brief introduction to your project, explaining its purpose and what problem it solves.
+TODO: Provide a brief introduction to the project, explaining its purpose and what problem it solves.
 
 ## **Installation**
 ### **Prerequisites**
 Install Ollama at https://ollama.com/
+Install NodeJS at https://nodejs.org/en
 
 ### **Setup**
-Provide step-by-step installation instructions. Example:
-```bash
-git clone https://github.com/your-username/your-repo.git
-cd your-repo
-pip install -r requirements.txt  # If using Python
-npm install  # If using Node.js
+
+Below are the steps needed to run the app for the first time. These steps will only work if you have the correct prerequisite installations. 
+
+1. Clone the repo into your local environment using `git clone https://github.com/andreaseno/SportsLLM.git`
+
+2. Enter into the frontend application using `cd SportsLLM/open-webui`
+
+3. Install the node depencies using `npm install`
+
+4. Move into the backend using `cd backend`
+
+5. Install python dependencies using `pip install -r requirements.txt  -U`
+
+6. Build the webapp using `npm run build`
+
+7. Pull the desired model to run with using `ollama pull llama3.1:latest` (replace llama3.1:latest with whatever model you want. I recommend 3.2:latest if you want a smaller model that runs faster)
+
+8. Make sure Ollama server is running by running `ollama serve` in a separate terminal
+
+9. Run the webapp using `./start.sh`
+
+
+### **Running the App**
+
+To run the app, you should already have ollama started as detailed in step 7 of the setup. Every time you make a change to a .svelte file, you need to rerun step 6 to get changes to show (this does not apply to changes to .py files). Step 8 must be ran every time the app needs to be started, and needs to be reran to show ANY new changes. 
