@@ -172,7 +172,4 @@ cython_debug/
 
 */node_modules
 
-*/pyodide-lock.json
-
-*/package-lock.json
-
+*.DS_Store
