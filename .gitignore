@@ -169,3 +169,10 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+*/node_modules
+
+*/pyodide-lock.json
+
+*/package-lock.json
+
