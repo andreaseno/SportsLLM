@@ -17,16 +17,83 @@ TODO: Add description here
 ---
 
 ## **Introduction**
-TOTO: Provide a brief introduction to your project, explaining its purpose and what problem it solves.
+TODO: Provide a brief introduction to your project, explaining its purpose and what problem it solves.
 
 ## **Installation**
 ### **Prerequisites**
-Install Ollama at https://ollama.com/
+1. **Python 3.8+** - Required for running the custom server
+2. **Ollama** - Install from [ollama.com](https://ollama.com/)
 
-### **Setup**
-Provide step-by-step installation instructions. Example:
-```bash
-git clone https://github.com/your-username/your-repo.git
-cd your-repo
-pip install -r requirements.txt  # If using Python
-npm install  # If using Node.js
+### **Setup Instructions**
+
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/your-username/SportsLLM.git
+   cd SportsLLM
+   ```
+
+2. **Install Python Dependencies**
+   ```bash
+   pip install fastapi uvicorn httpx
+   ```
+
+3. **Configure Ollama**
+   - Start Ollama on port 11435 (different from default to avoid conflicts)
+   ```bash
+   ollama serve -p 11435
+   ```
+   - Pull your desired models:
+   ```bash
+   ollama pull llama3.1
+   # Add any other models you want to use
+   ```
+
+4. **Start the Custom Server**
+   ```bash
+   python custom_llm_server.py
+   ```
+   The server will run on port 11434, acting as a middleware between Open-WebUI and Ollama.
+
+5. **Configure Open-WebUI**
+   - Set the Ollama base URL to point to your custom server:
+   ```bash
+   export OLLAMA_BASE_URL=http://localhost:11434
+   ```
+   - Start Open-WebUI following their installation instructions
+
+### **Verification**
+To verify your installation:
+1. Ensure Ollama is running on port 11435
+2. Confirm the custom server is running on port 11434
+3. Open the Open-WebUI interface
+4. You should see your available models in the model selection dropdown
+5. Test a chat interaction to ensure everything is working properly
+
+### **Troubleshooting**
+- If models aren't showing up, check that Ollama is running and accessible
+- If chat isn't working, verify all components are running on their correct ports
+- Check the custom server logs for any error messages
+
+## **Usage**
+TODO: Add usage instructions
+
+## **Features**
+TODO: Add features
+
+## **Contributing**
+TODO: Add contributing guidelines
+
+## **License**
+TODO: Add license information
+
+## **Examples**
+TODO: Add examples
+
+## **API Reference**
+TODO: Add API reference
+
+## **Roadmap**
+TODO: Add roadmap
+
+## **Acknowledgments**
+TODO: Add acknowledgments
