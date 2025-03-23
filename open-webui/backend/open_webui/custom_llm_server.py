@@ -85,6 +85,18 @@ async def chat(request: Request):
                         "role": "system",
                         "content": "You are a helpful AI assistant."
                     })
+                    
+            if "metadata" in data:
+                # TODO: Handle different tasks 
+                if "task" in data["metadata"]:
+                    task = data["metadata"]["task"]
+                    if task == "tags_generation":
+                        print("tags_generation")
+                    elif task == "title_generation":
+                        print("title_generation")
+                     
+                else:
+                    print("chat task")
             
             # Forward the modified request to Ollama
             async with async_client.stream(
@@ -129,7 +141,19 @@ async def generate(request: Request):
             # Example: Add custom prompt processing
             if "prompt" in data:
                 data["prompt"] = f"Process this request: {data['prompt']}"
-            
+                
+            if "metadata" in data:
+                # TODO: Handle different tasks 
+                if "task" in data["metadata"]:
+                    task = data["metadata"]["task"]
+                    if task == "tags_generation":
+                        print("tags_generation")
+                    elif task == "title_generation":
+                        print("title_generation")
+                     
+                else:
+                    print("chat task")
+                        
             # Forward to Ollama
             async with async_client.stream(
                 "POST",

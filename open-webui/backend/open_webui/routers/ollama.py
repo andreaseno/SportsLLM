@@ -988,8 +988,11 @@ async def generate_chat_completion(
         )
 
     payload = {**form_data.model_dump(exclude_none=True)}
-    if "metadata" in payload:
-        del payload["metadata"]
+    payload["metadata"] = metadata
+    # print("payload: ", payload)
+    # if "metadata" in payload:
+    #     print("deleting metadata")
+    #     del payload["metadata"]
 
     model_id = payload["model"]
     model_info = Models.get_model_by_id(model_id)

@@ -38,9 +38,9 @@ TODO: Provide a brief introduction to your project, explaining its purpose and w
    ```
 
 3. **Configure Ollama**
-   - Start Ollama on port 11435 (different from default to avoid conflicts)
+   - Start Ollama on port 11434 (this is the default port)
    ```bash
-   ollama serve -p 11435
+   ollama serve 
    ```
    - Pull your desired models:
    ```bash
@@ -52,19 +52,19 @@ TODO: Provide a brief introduction to your project, explaining its purpose and w
    ```bash
    python custom_llm_server.py
    ```
-   The server will run on port 11434, acting as a middleware between Open-WebUI and Ollama.
+   The server will run on port 11435, acting as a middleware between Open-WebUI and Ollama.
 
 5. **Configure Open-WebUI**
    - Set the Ollama base URL to point to your custom server:
    ```bash
-   export OLLAMA_BASE_URL=http://localhost:11434
+   export OLLAMA_BASE_URL=http://localhost:11435
    ```
    - Start Open-WebUI following their installation instructions
 
 ### **Verification**
 To verify your installation:
-1. Ensure Ollama is running on port 11435
-2. Confirm the custom server is running on port 11434
+1. Ensure Ollama is running on port 11434
+2. Confirm the custom server is running on port 11435
 3. Open the Open-WebUI interface
 4. You should see your available models in the model selection dropdown
 5. Test a chat interaction to ensure everything is working properly
