@@ -162,6 +162,8 @@ async def generate_chat_completion(
     bypass_filter: bool = False,
 ):
     log.debug(f"generate_chat_completion: {form_data}")
+    # print("\ngenerate_chat_completion: ", form_data)
+    print()
     if BYPASS_MODEL_ACCESS_CONTROL:
         bypass_filter = True
 
@@ -195,6 +197,7 @@ async def generate_chat_completion(
     model = models[model_id]
 
     if getattr(request.state, "direct", False):
+        print("generate_direct_chat_completion")
         return await generate_direct_chat_completion(
             request, form_data, user=user, models=models
         )
