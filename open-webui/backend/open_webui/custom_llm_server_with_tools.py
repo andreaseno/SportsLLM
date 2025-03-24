@@ -11,6 +11,16 @@ from pathlib import Path
 import ollama
 from ollama_tools import  generate_function_description, use_tools
 import traceback
+from nba_tools import (
+    get_player_injuries, 
+    get_game_odds, 
+    get_head_to_head_stats, 
+    get_league_leaders, 
+    get_player_info, 
+    # get_player_season_stats, 
+    get_team_info, 
+    get_team_standings
+    )
 
 app = FastAPI()
 
@@ -54,23 +64,30 @@ def query_model(messages, tools, model='llama3.1:latest'):
     )
     return response
 
-def get_player_stats(Name:str) -> str:
-    """Get the statistics for an NBA player.
+# def get_player_stats(Name:str) -> str:
+#     """Get the statistics for an NBA player.
 
-    Args:
-        Name: The name of the player to get the statistics for.
+#     Args:
+#         Name: The name of the player to get the statistics for.
 
-    Returns:
-        A string with the statistics for the player.
-    """
-    print(f"\n\n\n\n\nget_player_stats: {Name}\n\n\n\n\n")
-    # base_url = f"https://wttr.in/{city}?format=j1"
-    # response = requests.get(base_url)
-    # data = response.json()
-    return f"""The statistics for {Name} are: {Name}"""
+#     Returns:
+#         A string with the statistics for the player.
+#     """
+#     print(f"\n\n\n\n\nget_player_stats: {Name}\n\n\n\n\n")
+#     # base_url = f"https://wttr.in/{city}?format=j1"
+#     # response = requests.get(base_url)
+#     # data = response.json()
+#     return f"""The statistics for {Name} are: {Name}"""
 
 tools = [
-    generate_function_description(get_player_stats)
+    generate_function_description(get_player_injuries),
+    generate_function_description(get_game_odds),
+    generate_function_description(get_head_to_head_stats),
+    generate_function_description(get_league_leaders),
+    generate_function_description(get_player_info),
+    generate_function_description(get_player_season_stats),
+    generate_function_description(get_team_info),
+    generate_function_description(get_team_standings),
 ]
 functions = {function["function"]["name"]: globals()[function["function"]["name"]] for function in tools }
 
@@ -160,71 +177,101 @@ async def chat(request: Request):
                 # For function calling path
                 messages = data.get('messages', [])
                 
-                async with async_client.stream(
-                    "POST",
-                    f"{OLLAMA_API_URL}/api/chat",
-                    json={
-                        'model': data.get('model', 'llama3.2:1b'),
-                        'messages': messages,
-                        'tools': tools,
-                        'stream': is_streaming
-                    },
-                    headers={"Content-Type": "application/json"}
-                ) as response:
-                    accumulated_response = b""
-                    async for chunk in response.aiter_bytes():
-                        try:
-                            # Decode and parse the JSON chunk
-                            chunk_data = json.loads(chunk.decode('utf-8'))
-                            print("Function call chunk:", chunk_data)  # Debug print
-                            
-                            if 'message' in chunk_data and 'tool_calls' in chunk_data['message']:
-                                tool_calls = chunk_data['message']['tool_calls']
-                                break
-                            
-                            if is_streaming:
-                                yield chunk
-                            else:
-                                accumulated_response += chunk
-                        except json.JSONDecodeError:
-                            # Handle incomplete JSON chunks
-                            if is_streaming:
-                                yield chunk
-                            else:
-                                accumulated_response += chunk
-                    
-                    if not is_streaming:
-                        print("Full response:", accumulated_response)  # Debug print
-                        yield accumulated_response
-                
-                result = use_tools(tool_calls, functions)
-                
-                messages.append({
-                    "role": "tool",
-                    "content": result
-                })
-                
-                async with async_client.stream(
-                    "POST",
-                    f"{OLLAMA_API_URL}/api/chat",
-                    json={
-                        'model': data.get('model', 'llama3.2:1b'),
-                        'messages': messages,
-                        'stream': is_streaming
-                    },
-                    headers={"Content-Type": "application/json"}
-                ) as response:
-                    accumulated_response = b""
-                    async for chunk in response.aiter_bytes():
-                        if is_streaming:
-                            yield chunk
-                        else:
-                            accumulated_response += chunk
+                max_retries = 10
+                retry_count = 0
+                tool_call_success = False
 
+                while retry_count < max_retries and not tool_call_success:
+                    try:
+                        async with async_client.stream(
+                            "POST",
+                            f"{OLLAMA_API_URL}/api/chat",
+                            json={
+                                'model': data.get('model', 'llama3.2:1b'),
+                                'messages': messages,
+                                'tools': tools,
+                                'stream': is_streaming
+                            },
+                            headers={"Content-Type": "application/json"}
+                        ) as response:
+                            accumulated_response = b""
+                            tool_calls = None
+                            async for chunk in response.aiter_bytes():
+                                try:
+                                    # Decode and parse the JSON chunk
+                                    chunk_data = json.loads(chunk.decode('utf-8'))
+                                    print("Function call chunk:", chunk_data)  # Debug print
+                                    
+                                    if 'message' in chunk_data and 'tool_calls' in chunk_data['message']:
+                                        tool_calls = chunk_data['message']['tool_calls']
+                                        break
+                                    
+                                    if is_streaming:
+                                        yield chunk
+                                    else:
+                                        accumulated_response += chunk
+                                except json.JSONDecodeError:
+                                    # Handle incomplete JSON chunks
+                                    if is_streaming:
+                                        yield chunk
+                                    else:
+                                        accumulated_response += chunk
+                            
+                            if not is_streaming:
+                                print("Full response:", accumulated_response)  # Debug print
+                                yield accumulated_response
+
+                        if tool_calls:
+                            result = use_tools(tool_calls, functions)
+                            tool_call_success = True
+                        # else:
+                        #     # If no tool calls were found, add a message asking for proper tool usage
+                        #     messages.append({
+                        #         "role": "system",
+                        #         "content": "Please provide a properly formatted tool call. Your previous response did not include any tool calls."
+                        #     })
+                    except Exception as e:
+                        print(f"Tool call attempt {retry_count + 1} failed: {str(e)}")
+                        retry_count += 1
+                        if retry_count < max_retries:
+                            # Add a message to guide the model to provide better formatting
+                            # messages.append({
+                            #     "role": "system",
+                            #     "content": f"The previous tool call failed due to: {str(e)}. Please provide a properly formatted tool call."
+                            # })
+                            print()
+                        else:
+                            # If we've exhausted retries, yield an error message
+                            error_response = {"error": f"Failed to execute tool call after {max_retries} attempts: {str(e)}"}
+                            yield json.dumps(error_response).encode()
+                            return
+
+                if tool_call_success:
+                    messages.append({
+                        "role": "tool",
+                        "content": result
+                    })
                     
-                    if not is_streaming:
-                        print("Full response:", accumulated_response)  # Debug print
-                        yield accumulated_response
+                    async with async_client.stream(
+                        "POST",
+                        f"{OLLAMA_API_URL}/api/chat",
+                        json={
+                            'model': data.get('model', 'llama3.2:1b'),
+                            'messages': messages,
+                            'stream': is_streaming
+                        },
+                        headers={"Content-Type": "application/json"}
+                    ) as response:
+                        accumulated_response = b""
+                        async for chunk in response.aiter_bytes():
+                            if is_streaming:
+                                yield chunk
+                            else:
+                                accumulated_response += chunk
+
+                        if not is_streaming:
+                            print("Full response:", accumulated_response)  # Debug print
+                            yield accumulated_response
 
         except Exception as e:
             print(f"Error in chat: {str(e)}")
