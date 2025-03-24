@@ -1096,7 +1096,8 @@ async def generate_openai_completion(
             status_code=400,
             detail=str(e),
         )
-
+    print("completion")
+    print("form_data", form_data)
     payload = {**form_data.model_dump(exclude_none=True, exclude=["metadata"])}
     if "metadata" in payload:
         del payload["metadata"]

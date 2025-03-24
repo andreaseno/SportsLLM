@@ -271,6 +271,9 @@ async def generate_chat_completion(
                 user=user,
                 bypass_filter=bypass_filter,
             )
+            print("ollama")
+            print(form_data)
+            print("/n")
             if form_data.get("stream"):
                 response.headers["content-type"] = "text/event-stream"
                 return StreamingResponse(

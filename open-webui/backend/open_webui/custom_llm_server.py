@@ -98,6 +98,8 @@ async def chat(request: Request):
                 else:
                     print("chat task")
             
+            print("data", data)
+            
             # Forward the modified request to Ollama
             async with async_client.stream(
                 "POST",
