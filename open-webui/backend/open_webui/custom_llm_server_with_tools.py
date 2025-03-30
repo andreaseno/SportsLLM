@@ -85,7 +85,7 @@ tools = [
     generate_function_description(get_head_to_head_stats),
     generate_function_description(get_league_leaders),
     generate_function_description(get_player_info),
-    generate_function_description(get_player_season_stats),
+    # generate_function_description(get_player_season_stats),
     generate_function_description(get_team_info),
     generate_function_description(get_team_standings),
 ]
