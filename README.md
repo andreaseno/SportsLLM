@@ -34,7 +34,12 @@ TODO: Provide a brief introduction to your project, explaining its purpose and w
 
 2. **Install Python Dependencies**
    ```bash
-   pip install fastapi uvicorn httpx
+   pip install fastapi uvicorn httpx balldontlie
+   ```
+
+3. **Install Other Dependencies**
+   ```bash
+   sudo apt install npm
    ```
 
 3. **Configure Ollama**
@@ -59,7 +64,15 @@ TODO: Provide a brief introduction to your project, explaining its purpose and w
    ```bash
    export OLLAMA_BASE_URL=http://localhost:11435
    ```
-   - Start Open-WebUI following their installation instructions
+   - copy `.env.example` to `.env` and set the OLLAMA_BASE_URL variable to http://localhost:11435
+   - run the following commands:
+   - `npm install`
+   - `npm run build`
+   - `cd backend`
+   - `pip install -r requirements.txt -U`
+
+6. **Run Open-WebUI**
+   - Build the 
 
 ### **Verification**
 To verify your installation:
