@@ -282,36 +282,112 @@ def get_team_info(team_name: str) -> Dict:
         traceback.print_exc()
         return {"error": f"Error fetching team info: {str(e)}"}
 
-def get_team_standings(season: int) -> Dict:
-    """Get the current NBA standings for a specific season.
+def get_game_info(season: int, home_team: str, away_team: str) -> Dict:
+    """Get detailed information about an NBA game, or all nba games. Search for specific game by season, home_team, and away team.
 
     Args:
         season: The season year (e.g., 2023 for 2023-24 season)
+        home_team: Name of the home team (e.g., "Warriors" or "Golden State Warriors")
+        away_team: Name of the away team (e.g., "Warriors" or "Golden State Warriors")
 
     Returns:
-        Dict containing standings information for all teams including wins, losses, conference rank, etc.
+        Dict containing game information including period, start_time, time_in_period, etc.
     """
-    print(f"\n[DEBUG] get_team_standings() called with season: {season}")
+    print(f"\n[DEBUG] get_game_info() called with season: {season}, home_team: {home_team}, away_team: {away_team} ")
     try:
         # Input validation
-        current_year = datetime.now().year
-        if not isinstance(season, int) or season < 2000 or season > current_year:
-            return {"error": f"Invalid year. Please use a year between 2000 and {current_year}"}
+        if not home_team:
+            return {"error": "home_team name is required"}
+        if not away_team:
+            return {"error": "away_team name is required"}
+        if not season:
+            return {"error": "season name is required"}
         
         if USE_MOCK_DATA:
-            print(f"[DEBUG] Returning mock standings for {season} season")
-            return MOCK_STANDINGS
+            # Search through mock games
+            matching_games = []
+            for game in MOCK_GAMES:
+                if (game["home_team"]["name"].lower() == home_team.lower() and 
+                    game["visitor_team"]["name"].lower() == away_team.lower()):
+                    matching_games.append(game)
+            
+            if len(matching_games) >= 1:
+                print(f"[DEBUG] Found matching mock games: {matching_games}")
+                return matching_games
+            else:
+                print(f"[DEBUG] No mock games found")
+                return {"error": f"No games found"}
         
-        # Real API call
-        response = api.nba.standings.get(season=season)
-        standings = response.data if hasattr(response, 'data') else []
-        print(f"[DEBUG] Retrieved standings for {season} season with {len(standings)} teams")
-        return standings
+        # Real API call with pagination
+        all_games = []
+        next_cursor = None
+        per_page = 100  # Maximum allowed by the API
+        
+        # while True:
+            # Make API request with current cursor
+        params = {
+            "seasons": [season],
+            "per_page": per_page
+        }
+        
+        # if next_cursor is not None:
+        #     params["cursor"] = next_cursor
+            
+        response = api.nba.games.list(**params)
+        all_games = response.data if hasattr(response, 'data') else  []
+        
+        print(f"[DEBUG] Retrieved {len(all_games)} games in total")
+        
+        # Filter games by home and away team
+        matching_games = []
+        for game in all_games:
+            if (home_team.lower() in game.home_team.name.lower() and 
+                away_team.lower() in game.visitor_team.name.lower()):
+                matching_games.append(game)
+        
+        if len(matching_games) >= 1:
+            print(f"[DEBUG] Found {len(matching_games)} matching games")
+            return matching_games
+        else:
+            print(f"[DEBUG] No matching games found")
+            return {"error": f"No games found"}
+            
     except Exception as e:
-        print(f"[ERROR] Error in get_team_standings(): {str(e)}")
+        print(f"[ERROR] Error in get_game_info(): {str(e)}")
         print("[DEBUG] Full error traceback:")
         traceback.print_exc()
-        return {"error": f"Error fetching standings: {str(e)}"}
+        return {"error": f"Error fetching game info: {str(e)}"}
+
+# def get_team_standings(season: int) -> Dict:
+#     """Get the current NBA standings for a specific season.
+
+#     Args:
+#         season: The season year (e.g., 2023 for 2023-24 season)
+
+#     Returns:
+#         Dict containing standings information for all teams including wins, losses, conference rank, etc.
+#     """
+#     print(f"\n[DEBUG] get_team_standings() called with season: {season}")
+#     try:
+#         # Input validation
+#         current_year = datetime.now().year
+#         if not isinstance(season, int) or season < 2000 or season > current_year:
+#             return {"error": f"Invalid year. Please use a year between 2000 and {current_year}"}
+        
+#         if USE_MOCK_DATA:
+#             print(f"[DEBUG] Returning mock standings for {season} season")
+#             return MOCK_STANDINGS
+        
+#         # Real API call
+#         response = api.nba.standings.get(season=season)
+#         standings = response.data if hasattr(response, 'data') else []
+#         print(f"[DEBUG] Retrieved standings for {season} season with {len(standings)} teams")
+#         return standings
+#     except Exception as e:
+#         print(f"[ERROR] Error in get_team_standings(): {str(e)}")
+#         print("[DEBUG] Full error traceback:")
+#         traceback.print_exc()
+#         return {"error": f"Error fetching standings: {str(e)}"}
 
 # TODO: FIX get_player_season_stats
 
@@ -359,240 +435,240 @@ def get_team_standings(season: int) -> Dict:
 #         traceback.print_exc()
 #         return {"error": f"Error fetching season stats: {str(e)}"}
 
-def get_league_leaders(season: int, stat_type: str) -> List[Dict]:
-    """Get the NBA statistical leaders for a specific category.
+# def get_league_leaders(season: int, stat_type: str) -> List[Dict]:
+#     """Get the NBA statistical leaders for a specific category.
 
-    Args:
-        season: The season year (e.g., 2023 for 2023-24 season)
-        stat_type: Type of stat to get leaders for (e.g., "pts", "reb", "ast", "stl", "blk")
+#     Args:
+#         season: The season year (e.g., 2023 for 2023-24 season)
+#         stat_type: Type of stat to get leaders for (e.g., "pts", "reb", "ast", "stl", "blk")
 
-    Returns:
-        List of dicts containing top players and their stats for the specified category
-    """
-    print(f"\n[DEBUG] get_league_leaders() called with season: {season}, stat_type: {stat_type}")
-    try:
-        # Input validation
-        if not stat_type or stat_type.strip() == "":
-            return {"error": "Stat type is required"}
+#     Returns:
+#         List of dicts containing top players and their stats for the specified category
+#     """
+#     print(f"\n[DEBUG] get_league_leaders() called with season: {season}, stat_type: {stat_type}")
+#     try:
+#         # Input validation
+#         if not stat_type or stat_type.strip() == "":
+#             return {"error": "Stat type is required"}
         
-        if USE_MOCK_DATA:
-            if stat_type in MOCK_LEADERS:
-                print(f"[DEBUG] Returning mock leaders for {stat_type}")
-                return MOCK_LEADERS[stat_type]
-            print(f"[DEBUG] No mock data for stat type: {stat_type}")
-            return {"error": f"No mock data available for stat type {stat_type}"}
+#         if USE_MOCK_DATA:
+#             if stat_type in MOCK_LEADERS:
+#                 print(f"[DEBUG] Returning mock leaders for {stat_type}")
+#                 return MOCK_LEADERS[stat_type]
+#             print(f"[DEBUG] No mock data for stat type: {stat_type}")
+#             return {"error": f"No mock data available for stat type {stat_type}"}
         
-        # Real API call
-        response = api.nba.leaders.get(
-            season=season,
-            stat_type=stat_type
-        )
-        leaders = response.data if hasattr(response, 'data') else []
-        print(f"[DEBUG] Retrieved {len(leaders)} leaders for {stat_type}")
-        return leaders
-    except Exception as e:
-        print(f"[ERROR] Error in get_league_leaders(): {str(e)}")
-        print("[DEBUG] Full error traceback:")
-        traceback.print_exc()
-        return {"error": f"Error fetching league leaders: {str(e)}"}
+#         # Real API call
+#         response = api.nba.leaders.get(
+#             season=season,
+#             stat_type=stat_type
+#         )
+#         leaders = response.data if hasattr(response, 'data') else []
+#         print(f"[DEBUG] Retrieved {len(leaders)} leaders for {stat_type}")
+#         return leaders
+#     except Exception as e:
+#         print(f"[ERROR] Error in get_league_leaders(): {str(e)}")
+#         print("[DEBUG] Full error traceback:")
+#         traceback.print_exc()
+#         return {"error": f"Error fetching league leaders: {str(e)}"}
 
-def get_game_odds(game_date: str = None, game_id: int = None) -> List[Dict]:
-    """Get betting odds for NBA games.
+# def get_game_odds(game_date: str = None, game_id: int = None) -> List[Dict]:
+#     """Get betting odds for NBA games.
 
-    Args:
-        game_date: Date of games in YYYY-MM-DD format (e.g., "2024-04-01")
-        game_id: Specific game ID to get odds for
+#     Args:
+#         game_date: Date of games in YYYY-MM-DD format (e.g., "2024-04-01")
+#         game_id: Specific game ID to get odds for
 
-    Returns:
-        List of dicts containing betting odds information including moneyline, spread, and over/under
-    """
-    print(f"\n[DEBUG] get_game_odds() called with game_date: {game_date}, game_id: {game_id}")
-    try:
-        # Input validation
-        if not game_date and not game_id:
-            return {"error": "Either game_date or game_id must be provided"}
+#     Returns:
+#         List of dicts containing betting odds information including moneyline, spread, and over/under
+#     """
+#     print(f"\n[DEBUG] get_game_odds() called with game_date: {game_date}, game_id: {game_id}")
+#     try:
+#         # Input validation
+#         if not game_date and not game_id:
+#             return {"error": "Either game_date or game_id must be provided"}
         
-        if game_id is not None:
-            if not isinstance(game_id, int) or game_id <= 0:
-                return {"error": "Invalid game ID"}
+#         if game_id is not None:
+#             if not isinstance(game_id, int) or game_id <= 0:
+#                 return {"error": "Invalid game ID"}
         
-        if game_date:
-            try:
-                # Validate date format
-                datetime.strptime(game_date, "%Y-%m-%d")
-                # Check if date is in the past
-                game_datetime = datetime.strptime(game_date, "%Y-%m-%d")
-                if game_datetime.date() < datetime.now().date():
-                    return {"error": "No games found for the specified date"}
-                # Check if date is too far in the future
-                if game_datetime.date() > (datetime.now() + timedelta(days=30)).date():
-                    return {"error": "No games found for the specified date"}
-            except ValueError:
-                return {"error": "Invalid date format. Please use YYYY-MM-DD"}
+#         if game_date:
+#             try:
+#                 # Validate date format
+#                 datetime.strptime(game_date, "%Y-%m-%d")
+#                 # Check if date is in the past
+#                 game_datetime = datetime.strptime(game_date, "%Y-%m-%d")
+#                 if game_datetime.date() < datetime.now().date():
+#                     return {"error": "No games found for the specified date"}
+#                 # Check if date is too far in the future
+#                 if game_datetime.date() > (datetime.now() + timedelta(days=30)).date():
+#                     return {"error": "No games found for the specified date"}
+#             except ValueError:
+#                 return {"error": "Invalid date format. Please use YYYY-MM-DD"}
         
-        if USE_MOCK_DATA:
-            if game_id:
-                # Filter mock odds by game_id
-                odds = [odd for odd in MOCK_ODDS if odd["game_id"] == game_id]
-                if not odds:
-                    return {"error": f"No game found with ID {game_id}"}
-            elif game_date:
-                # For mock data, we'll just return all odds since we don't have date filtering
-                odds = MOCK_ODDS
-            print(f"[DEBUG] Returning {len(odds)} mock odds")
-            return odds
+#         if USE_MOCK_DATA:
+#             if game_id:
+#                 # Filter mock odds by game_id
+#                 odds = [odd for odd in MOCK_ODDS if odd["game_id"] == game_id]
+#                 if not odds:
+#                     return {"error": f"No game found with ID {game_id}"}
+#             elif game_date:
+#                 # For mock data, we'll just return all odds since we don't have date filtering
+#                 odds = MOCK_ODDS
+#             print(f"[DEBUG] Returning {len(odds)} mock odds")
+#             return odds
         
-        # Real API call
-        if game_date:
-            response = api.nba.odds.list(date=game_date)
-            odds = response.data if hasattr(response, 'data') else []
-            if not odds:
-                return {"error": "No games found for the specified date"}
-            print(f"[DEBUG] Retrieved {len(odds)} odds for date {game_date}")
-        elif game_id:
-            response = api.nba.odds.list(game_id=game_id)
-            odds = response.data if hasattr(response, 'data') else []
-            if not odds:
-                return {"error": f"No game found with ID {game_id}"}
-            print(f"[DEBUG] Retrieved odds for game_id {game_id}")
+#         # Real API call
+#         if game_date:
+#             response = api.nba.odds.list(date=game_date)
+#             odds = response.data if hasattr(response, 'data') else []
+#             if not odds:
+#                 return {"error": "No games found for the specified date"}
+#             print(f"[DEBUG] Retrieved {len(odds)} odds for date {game_date}")
+#         elif game_id:
+#             response = api.nba.odds.list(game_id=game_id)
+#             odds = response.data if hasattr(response, 'data') else []
+#             if not odds:
+#                 return {"error": f"No game found with ID {game_id}"}
+#             print(f"[DEBUG] Retrieved odds for game_id {game_id}")
         
-        return odds
-    except Exception as e:
-        print(f"[ERROR] Error in get_game_odds(): {str(e)}")
-        print("[DEBUG] Full error traceback:")
-        traceback.print_exc()
-        return {"error": f"Error fetching game odds: {str(e)}"}
+#         return odds
+#     except Exception as e:
+#         print(f"[ERROR] Error in get_game_odds(): {str(e)}")
+#         print("[DEBUG] Full error traceback:")
+#         traceback.print_exc()
+#         return {"error": f"Error fetching game odds: {str(e)}"}
 
-def get_player_injuries() -> List[Dict]:
-    """Get current NBA player injuries.
+# def get_player_injuries() -> List[Dict]:
+#     """Get current NBA player injuries.
 
-    Returns:
-        List of dicts containing information about injured players including status and expected return
-    """
-    print("\n[DEBUG] get_player_injuries() called")
-    try:
-        if USE_MOCK_DATA:
-            print(f"[DEBUG] Returning {len(MOCK_INJURIES)} mock injuries")
-            return MOCK_INJURIES
+#     Returns:
+#         List of dicts containing information about injured players including status and expected return
+#     """
+#     print("\n[DEBUG] get_player_injuries() called")
+#     try:
+#         if USE_MOCK_DATA:
+#             print(f"[DEBUG] Returning {len(MOCK_INJURIES)} mock injuries")
+#             return MOCK_INJURIES
         
-        # Real API call
-        response = api.nba.player_injuries.list()
-        injuries = response.data if hasattr(response, 'data') else []
-        print(f"[DEBUG] Retrieved {len(injuries)} player injuries")
-        return injuries
-    except Exception as e:
-        print(f"[ERROR] Error in get_player_injuries(): {str(e)}")
-        print("[DEBUG] Full error traceback:")
-        traceback.print_exc()
-        return {"error": f"Error fetching player injuries: {str(e)}"}
+#         # Real API call
+#         response = api.nba.player_injuries.list()
+#         injuries = response.data if hasattr(response, 'data') else []
+#         print(f"[DEBUG] Retrieved {len(injuries)} player injuries")
+#         return injuries
+#     except Exception as e:
+#         print(f"[ERROR] Error in get_player_injuries(): {str(e)}")
+#         print("[DEBUG] Full error traceback:")
+#         traceback.print_exc()
+#         return {"error": f"Error fetching player injuries: {str(e)}"}
 
-def get_head_to_head_stats(team1_name: str, team2_name: str, season: int) -> Dict:
-    """Get head-to-head statistics between two teams for a specific season.
+# def get_head_to_head_stats(team1_name: str, team2_name: str, season: int) -> Dict:
+#     """Get head-to-head statistics between two teams for a specific season.
 
-    Args:
-        team1_name: Name of first team
-        team2_name: Name of second team
-        season: The season year (e.g., 2023 for 2023-24 season)
+#     Args:
+#         team1_name: Name of first team
+#         team2_name: Name of second team
+#         season: The season year (e.g., 2023 for 2023-24 season)
 
-    Returns:
-        Dict containing head-to-head statistics between the teams
-    """
-    print(f"\n[DEBUG] get_head_to_head_stats() called with team1: {team1_name}, team2: {team2_name}, season: {season}")
-    try:
-        # Input validation
-        if not team1_name or not team2_name:
-            return {"error": "Both team names are required"}
+#     Returns:
+#         Dict containing head-to-head statistics between the teams
+#     """
+#     print(f"\n[DEBUG] get_head_to_head_stats() called with team1: {team1_name}, team2: {team2_name}, season: {season}")
+#     try:
+#         # Input validation
+#         if not team1_name or not team2_name:
+#             return {"error": "Both team names are required"}
         
-        if team1_name.lower() == team2_name.lower():
-            return {"error": "Cannot compare a team with itself"}
+#         if team1_name.lower() == team2_name.lower():
+#             return {"error": "Cannot compare a team with itself"}
         
-        current_year = datetime.now().year
-        if not isinstance(season, int) or season < 2000 or season > current_year:
-            return {"error": f"Invalid year. Please use a year between 2000 and {current_year}"}
+#         current_year = datetime.now().year
+#         if not isinstance(season, int) or season < 2000 or season > current_year:
+#             return {"error": f"Invalid year. Please use a year between 2000 and {current_year}"}
         
-        if USE_MOCK_DATA:
-            # Get team IDs from mock data
-            team1 = get_team_info(team1_name)
-            team2 = get_team_info(team2_name)
+#         if USE_MOCK_DATA:
+#             # Get team IDs from mock data
+#             team1 = get_team_info(team1_name)
+#             team2 = get_team_info(team2_name)
             
-            if "error" in team1 or "error" in team2:
-                print("[DEBUG] One or both teams not found in mock data")
-                return {"error": "One or both teams not found"}
+#             if "error" in team1 or "error" in team2:
+#                 print("[DEBUG] One or both teams not found in mock data")
+#                 return {"error": "One or both teams not found"}
             
-            print(f"[DEBUG] Found team IDs - team1: {team1['id']}, team2: {team2['id']}")
+#             print(f"[DEBUG] Found team IDs - team1: {team1['id']}, team2: {team2['id']}")
             
-            # Filter mock games between these teams
-            games = [game for game in MOCK_GAMES 
-                    if (game["home_team"]["id"] == team1["id"] and game["visitor_team"]["id"] == team2["id"]) or
-                       (game["home_team"]["id"] == team2["id"] and game["visitor_team"]["id"] == team1["id"])]
+#             # Filter mock games between these teams
+#             games = [game for game in MOCK_GAMES 
+#                     if (game["home_team"]["id"] == team1["id"] and game["visitor_team"]["id"] == team2["id"]) or
+#                        (game["home_team"]["id"] == team2["id"] and game["visitor_team"]["id"] == team1["id"])]
             
-            print(f"[DEBUG] Found {len(games)} mock games between teams")
+#             print(f"[DEBUG] Found {len(games)} mock games between teams")
             
-            # Process head-to-head stats
-            stats = {
-                "total_games": len(games),
-                f"{team1['name']}_wins": 0,
-                f"{team2['name']}_wins": 0,
-                "games": games
-            }
+#             # Process head-to-head stats
+#             stats = {
+#                 "total_games": len(games),
+#                 f"{team1['name']}_wins": 0,
+#                 f"{team2['name']}_wins": 0,
+#                 "games": games
+#             }
             
-            for game in games:
-                if game["home_team_score"] > game["visitor_team_score"]:
-                    winner_id = game["home_team"]["id"]
-                else:
-                    winner_id = game["visitor_team"]["id"]
+#             for game in games:
+#                 if game["home_team_score"] > game["visitor_team_score"]:
+#                     winner_id = game["home_team"]["id"]
+#                 else:
+#                     winner_id = game["visitor_team"]["id"]
                     
-                if winner_id == team1["id"]:
-                    stats[f"{team1['name']}_wins"] += 1
-                else:
-                    stats[f"{team2['name']}_wins"] += 1
+#                 if winner_id == team1["id"]:
+#                     stats[f"{team1['name']}_wins"] += 1
+#                 else:
+#                     stats[f"{team2['name']}_wins"] += 1
             
-            print(f"[DEBUG] Final head-to-head stats: {stats}")
-            return stats
+#             print(f"[DEBUG] Final head-to-head stats: {stats}")
+#             return stats
         
-        # Real API call
-        # Get team IDs
-        team1 = get_team_info(team1_name)
-        team2 = get_team_info(team2_name)
+#         # Real API call
+#         # Get team IDs
+#         team1 = get_team_info(team1_name)
+#         team2 = get_team_info(team2_name)
         
-        if "error" in team1 or "error" in team2:
-            print("[DEBUG] One or both teams not found")
-            return {"error": "One or both teams not found"}
+#         if "error" in team1 or "error" in team2:
+#             print("[DEBUG] One or both teams not found")
+#             return {"error": "One or both teams not found"}
         
-        print(f"[DEBUG] Found team IDs - team1: {team1['id']}, team2: {team2['id']}")
+#         print(f"[DEBUG] Found team IDs - team1: {team1['id']}, team2: {team2['id']}")
         
-        # Get games between these teams
-        response = api.nba.games.list(
-            team_ids=[team1["id"], team2["id"]],
-            seasons=[season]
-        )
-        games = response.data if hasattr(response, 'data') else []
+#         # Get games between these teams
+#         response = api.nba.games.list(
+#             team_ids=[team1["id"], team2["id"]],
+#             seasons=[season]
+#         )
+#         games = response.data if hasattr(response, 'data') else []
         
-        print(f"[DEBUG] Found {len(games)} games between teams")
+#         print(f"[DEBUG] Found {len(games)} games between teams")
         
-        # Process head-to-head stats
-        stats = {
-            "total_games": len(games),
-            f"{team1['name']}_wins": 0,
-            f"{team2['name']}_wins": 0,
-            "games": games
-        }
+#         # Process head-to-head stats
+#         stats = {
+#             "total_games": len(games),
+#             f"{team1['name']}_wins": 0,
+#             f"{team2['name']}_wins": 0,
+#             "games": games
+#         }
         
-        for game in games:
-            if game["home_team_score"] > game["visitor_team_score"]:
-                winner_id = game["home_team"]["id"]
-            else:
-                winner_id = game["visitor_team"]["id"]
+#         for game in games:
+#             if game["home_team_score"] > game["visitor_team_score"]:
+#                 winner_id = game["home_team"]["id"]
+#             else:
+#                 winner_id = game["visitor_team"]["id"]
                 
-            if winner_id == team1["id"]:
-                stats[f"{team1['name']}_wins"] += 1
-            else:
-                stats[f"{team2['name']}_wins"] += 1
+#             if winner_id == team1["id"]:
+#                 stats[f"{team1['name']}_wins"] += 1
+#             else:
+#                 stats[f"{team2['name']}_wins"] += 1
         
-        print(f"[DEBUG] Final head-to-head stats: {stats}")
-        return stats
-    except Exception as e:
-        print(f"[ERROR] Error in get_head_to_head_stats(): {str(e)}")
-        print("[DEBUG] Full error traceback:")
-        traceback.print_exc()
-        return {"error": f"Error fetching head-to-head stats: {str(e)}"} 
+#         print(f"[DEBUG] Final head-to-head stats: {stats}")
+#         return stats
+#     except Exception as e:
+#         print(f"[ERROR] Error in get_head_to_head_stats(): {str(e)}")
+#         print("[DEBUG] Full error traceback:")
+#         traceback.print_exc()
+#         return {"error": f"Error fetching head-to-head stats: {str(e)}"} 

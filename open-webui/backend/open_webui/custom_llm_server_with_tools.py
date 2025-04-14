@@ -12,14 +12,14 @@ import ollama
 from ollama_tools import  generate_function_description, use_tools
 import traceback
 from nba_tools import (
-    get_player_injuries, 
-    get_game_odds, 
-    get_head_to_head_stats, 
-    get_league_leaders, 
+    # get_player_injuries, 
+    # get_game_odds, 
+    # get_head_to_head_stats, 
+    # get_league_leaders, 
     get_player_info, 
-    # get_player_season_stats, 
+    get_game_info, 
     get_team_info, 
-    get_team_standings
+    # get_team_standings
     )
 
 app = FastAPI()
@@ -80,14 +80,14 @@ def query_model(messages, tools, model='llama3.1:latest'):
 #     return f"""The statistics for {Name} are: {Name}"""
 
 tools = [
-    generate_function_description(get_player_injuries),
-    generate_function_description(get_game_odds),
-    generate_function_description(get_head_to_head_stats),
-    generate_function_description(get_league_leaders),
+    # generate_function_description(get_player_injuries),
+    # generate_function_description(get_game_odds),
+    # generate_function_description(get_head_to_head_stats),
+    # generate_function_description(get_league_leaders),
     generate_function_description(get_player_info),
-    # generate_function_description(get_player_season_stats),
+    generate_function_description(get_game_info),
     generate_function_description(get_team_info),
-    generate_function_description(get_team_standings),
+    # generate_function_description(get_team_standings),
 ]
 functions = {function["function"]["name"]: globals()[function["function"]["name"]] for function in tools }
 

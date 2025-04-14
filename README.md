@@ -22,7 +22,16 @@ TODO: Provide a brief introduction to your project, explaining its purpose and w
 ## **Installation**
 ### **Prerequisites**
 1. **Python 3.8+** - Required for running the custom server
-2. **Ollama** - Install from [ollama.com](https://ollama.com/)
+```
+// for ubuntu/debian based
+sudo apt update
+sudo apt install python3 python3-pip -y
+
+// for Fedora / RHEL / CentOS
+sudo dnf update
+sudo dnf install python3 python3-pip -y
+```
+2. **Ollama** - Install from [ollama.com](https://ollama.com/) or run `curl -fsSL https://ollama.com/install.sh | sh`
 
 ### **Setup Instructions**
 
@@ -34,7 +43,7 @@ TODO: Provide a brief introduction to your project, explaining its purpose and w
 
 2. **Install Python Dependencies**
    ```bash
-   pip install fastapi uvicorn httpx balldontlie
+   pip install fastapi uvicorn httpx balldontlie ollama
    ```
 
 3. **Install Other Dependencies**
