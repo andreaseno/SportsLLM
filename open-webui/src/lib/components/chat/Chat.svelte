@@ -28,6 +28,7 @@
 		user,
 		socket,
 		showControls,
+		showToolResponse,
 		showCallOverlay,
 		currentChatPage,
 		temporaryChatEnabled,
@@ -81,6 +82,7 @@
 	import Messages from '$lib/components/chat/Messages.svelte';
 	import Navbar from '$lib/components/chat/Navbar.svelte';
 	import ChatControls from './ChatControls.svelte';
+	import ChatToolResponse from './ChatToolResponse.svelte';
 	import EventConfirmDialog from '../common/ConfirmDialog.svelte';
 	import Placeholder from './Placeholder.svelte';
 	import NotificationToast from '../NotificationToast.svelte';
@@ -93,6 +95,8 @@
 	const eventTarget = new EventTarget();
 	let controlPane;
 	let controlPaneComponent;
+	let toolResponsePane;
+	let toolResponsePaneComponent;
 
 	let autoScroll = true;
 	let processing = '';
@@ -429,7 +433,7 @@
 						controlPane.collapse();
 					}
 				} catch (e) {
-					// ignore
+					console.error(e);
 				}
 			}
 
@@ -437,6 +441,28 @@
 				showCallOverlay.set(false);
 				showOverview.set(false);
 				showArtifacts.set(false);
+				showToolResponse.set(false);
+			}
+		});
+
+		showToolResponse.subscribe(async (value) => {
+			if (toolResponsePane && !$mobile) {
+				try {
+					if (value) {
+						toolResponsePaneComponent.openPane();
+					} else {
+						toolResponsePane.collapse();
+					}
+				} catch (e) {
+					console.error(e);
+				}
+			}
+
+			if (!value) {
+				showCallOverlay.set(false);
+				showOverview.set(false);
+				showArtifacts.set(false);
+				showToolResponse.set(false);
 			}
 		});
 
@@ -689,6 +715,7 @@
 		}
 
 		await showControls.set(false);
+		await showToolResponse.set(false);
 		await showCallOverlay.set(false);
 		await showOverview.set(false);
 		await showArtifacts.set(false);
@@ -2086,6 +2113,22 @@
 					}
 					return a;
 				}, [])}
+				{submitPrompt}
+				{stopResponse}
+				{showMessage}
+				{eventTarget}
+			/>
+
+			<ChatToolResponse
+				bind:this={toolResponsePaneComponent}
+				bind:history
+				bind:chatFiles
+				bind:params
+				bind:files
+				bind:pane={toolResponsePane}
+				chatId={$chatId}
+				modelId={selectedModelIds?.at(0) ?? null}
+				models={$models.filter(m => selectedModelIds.includes(m.id))}
 				{submitPrompt}
 				{stopResponse}
 				{showMessage}

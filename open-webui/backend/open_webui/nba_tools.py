@@ -281,7 +281,6 @@ def get_team_info(team_name: str) -> Dict:
         print("[DEBUG] Full error traceback:")
         traceback.print_exc()
         return {"error": f"Error fetching team info: {str(e)}"}
-
 def get_game_info(season: int, home_team: str, away_team: str) -> Dict:
     """Get detailed information about an NBA game, or all nba games. Search for specific game by season, home_team, and away team.
 
