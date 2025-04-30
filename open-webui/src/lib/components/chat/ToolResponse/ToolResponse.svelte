@@ -13,23 +13,42 @@
 	// export let models = [];
 	// export let chatFiles = [];
 	// export let params = {};
+	// export let toolData: any = null;
+	// export let history = {};
 
 	// let showValves = false;
+	
+	// let jsonInput = '{"glossary":{"title":"example glossary","GlossDiv":{"title":"S","GlossList":{"GlossEntry":{"ID":"SGML","SortAs":"SGML","GlossTerm":"Standard Generalized Markup Language","Acronym":"SGML","Abbrev":"ISO 8879:1986","GlossDef":{"para":"A meta-markup language, used to create markup languages such as DocBook.","GlossSeeAlso":["GML","XML"]},"GlossSee":"markup"}}}}}';
 </script>
 
 <div class=" dark:text-white">
 	<div class=" flex items-center justify-between dark:text-gray-100 mb-2">
 		<div class=" text-lg font-medium self-center font-primary">{$i18n.t('Tool Response')}</div>
-		<button
+		<!-- <button
 			class="self-center"
 			on:click={() => {
 				dispatch('close');
 			}}
 		>
 			<XMark className="size-3.5" />
-		</button>
+		</button> -->
 	</div>
-	<h1>Test zi</h1>
+	<div class="flex flex-col gap-4 p-4">
+		
+		{#if toolData}
+			<div class="flex flex-col gap-2">
+				<label class="text-sm font-medium">Function Call Data</label>
+				<pre class="p-4 bg-gray-100 dark:bg-gray-800 rounded overflow-auto max-h-[100dvh]">
+					<!-- {JSON.stringify(toolData, null, 2)} -->
+					 <h4>id=132 first_name='Luka' last_name='Doncic' position='F-G' height='6-6' weight='230' jersey_number='77' college='Real Madrid' country='Slovenia' draft_year=2018.0 draft_round=1.0 draft_number=3.0 team=NBATeam(id=14, conference='West', division='Pacific', city='Los Angeles', name='Lakers', full_name='Los Angeles Lakers', abbreviation='LAL') team_id=None</h4>
+				</pre>
+			</div>
+		{:else}
+		<div class="flex flex-col gap-2">
+			<label class="text-sm font-medium">No Function Call Data</label>
+		</div>
+		{/if}
+	</div>
 	<!-- {#if $user.role === 'admin' || $user?.permissions.chat?.controls}
 		<div class=" dark:text-gray-200 text-sm font-primary py-0.5 px-0.5">
 			{#if chatFiles.length > 0}

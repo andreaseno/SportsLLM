@@ -101,6 +101,6 @@ if __name__ == "__main__":
     #         break
     #     else:
     #         print("Invalid choice. Please try again.") 
-    result = get_game_info(2022, "Warriors", "Wizards")
+    result = get_game_info(home_team="NonExistent Team", away_team="Lakers")
     print("\nResult:")
     print(result)

@@ -147,21 +147,22 @@
 						</button>
 					</Tooltip>
 				{/if}
-
-				<Tooltip content={$i18n.t('Tool Response')}>
-					<button
-						id="tools-response-button"
-						class=" flex cursor-pointer px-2 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-850 transition"
-						on:click={async () => {
-							await showToolResponse.set(!$showToolResponse);
-						}}
-						aria-label="Tool Response"
-					>
-						<div class=" m-auto self-center">
-							<Document className=" size-5" strokeWidth="2" />
-						</div>
-					</button>
-				</Tooltip>
+				{#if shareEnabled && chat && (chat.id || $temporaryChatEnabled)}
+					<Tooltip content={$i18n.t('Tool Response')}>
+						<button
+							id="tools-response-button"
+							class=" flex cursor-pointer px-2 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-850 transition"
+							on:click={async () => {
+								await showToolResponse.set(!$showToolResponse);
+							}}
+							aria-label="Tool Response"
+						>
+							<div class=" m-auto self-center">
+								<Document className=" size-5" strokeWidth="2" />
+							</div>
+						</button>
+					</Tooltip>
+				{/if}
 
 				<Tooltip content={$i18n.t('New Chat')}>
 					<button

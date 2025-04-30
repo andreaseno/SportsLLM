@@ -251,7 +251,9 @@ async def chat(request: Request):
                         "role": "tool",
                         "content": result
                     })
-                    
+                    print("-"*64)
+                    print(f"\n\n\n toolcall made result is:\n{result}\n\n\n")
+                    print("-"*64)
                     async with async_client.stream(
                         "POST",
                         f"{OLLAMA_API_URL}/api/chat",
